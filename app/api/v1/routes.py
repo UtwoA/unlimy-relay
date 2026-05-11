@@ -209,7 +209,7 @@ def run_rotation_jobs(_: dict = Depends(require_roles(Role.OPERATOR.value, Role.
 
 
 @router.get("/metrics/summary")
-def metrics_summary(_: dict = Depends(require_roles(Role.VIEWER.value, Role.OPERATOR.value, Role.ADMIN.value)), db: Session = Depends(get_db)):
+def metrics_summary(db: Session = Depends(get_db)):
     total = db.scalar(select(func.count()).select_from(Node))
     online = db.scalar(select(func.count()).select_from(Node).where(Node.is_online.is_(True)))
     return {"nodes_total": total or 0, "nodes_online": online or 0}
