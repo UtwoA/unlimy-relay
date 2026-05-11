@@ -133,3 +133,45 @@ class AlertOut(BaseModel):
 
     class Config:
         from_attributes = True
+
+
+class OverviewKpiOut(BaseModel):
+    nodes_total: int
+    nodes_online: int
+    nodes_offline: int
+    nodes_draining: int
+    avg_rtt_ms: float
+    avg_handshake_rate: float
+    active_alerts_count: int
+
+
+class OverviewProblemNodeOut(BaseModel):
+    id: int
+    name: str
+    status: str
+    region: str
+    provider: str
+    is_online: bool
+    is_enabled: bool
+    rtt_ms: float
+    handshake_success_rate: float
+    score: float
+    age_hours: int
+
+    class Config:
+        from_attributes = True
+
+
+class OverviewTrendPointOut(BaseModel):
+    hour: str
+    online_ratio: float
+    avg_rtt_ms: float
+    handshake_ok_ratio: float
+
+
+class AdminOverviewOut(BaseModel):
+    kpi: OverviewKpiOut
+    problem_nodes: list[OverviewProblemNodeOut]
+    recent_alerts: list[AlertOut]
+    recent_audit: list[AuditOut]
+    trends_24h: list[OverviewTrendPointOut]

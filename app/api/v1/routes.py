@@ -1,5 +1,5 @@
 ﻿import base64
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from threading import Lock
 
 from fastapi import APIRouter, Depends, HTTPException, Request
@@ -10,8 +10,9 @@ from app.api.deps import check_ip_allowlist, rate_limit_auth, require_roles
 from app.db.session import get_db
 from app.infra.links import build_https_proxy_link, build_tg_proxy_link, qr_png_bytes
 from app.infra.security import decrypt_secret
-from app.models import AlertEvent, AuditLog, Node, Role
+from app.models import AlertEvent, AuditLog, HealthCheckRun, Node, NodeStatus, Role
 from app.schemas.api import (
+    AdminOverviewOut,
     AlertOut,
     AuditOut,
     DomainIn,
@@ -271,6 +272,78 @@ def run_health_jobs(_: dict = Depends(require_roles(Role.OPERATOR.value, Role.AD
 def run_rotation_jobs(_: dict = Depends(require_roles(Role.OPERATOR.value, Role.ADMIN.value))):
     celery_app.send_task("app.workers.tasks.run_auto_rotation")
     return {"ok": True}
+
+
+@router.get("/admin/overview", response_model=AdminOverviewOut)
+def admin_overview(_: dict = Depends(require_roles(Role.VIEWER.value, Role.OPERATOR.value, Role.ADMIN.value)), db: Session = Depends(get_db)):
+    total = db.scalar(select(func.count()).select_from(Node)) or 0
+    online = db.scalar(select(func.count()).select_from(Node).where(Node.is_online.is_(True), Node.is_enabled.is_(True))) or 0
+    draining = db.scalar(select(func.count()).select_from(Node).where(Node.status == NodeStatus.DRAINING.value)) or 0
+    offline = max(0, total - online)
+    avg_rtt = db.scalar(select(func.avg(Node.rtt_ms)).where(Node.is_online.is_(True), Node.is_enabled.is_(True)))
+    avg_hs = db.scalar(select(func.avg(Node.handshake_success_rate)).where(Node.is_enabled.is_(True)))
+    active_alerts = db.scalar(select(func.count()).select_from(AlertEvent).where(AlertEvent.created_at >= datetime.utcnow() - timedelta(hours=24))) or 0
+
+    problem_nodes = db.scalars(
+        select(Node)
+        .order_by(Node.score.asc(), Node.handshake_success_rate.asc(), Node.rtt_ms.desc())
+        .limit(10)
+    ).all()
+
+    recent_alerts = db.scalars(select(AlertEvent).order_by(AlertEvent.id.desc()).limit(10)).all()
+    recent_audit = db.scalars(select(AuditLog).order_by(AuditLog.id.desc()).limit(10)).all()
+
+    now = datetime.now(tz=timezone.utc).replace(minute=0, second=0, microsecond=0)
+    start = now - timedelta(hours=23)
+    health_rows = db.scalars(
+        select(HealthCheckRun)
+        .where(HealthCheckRun.checked_at >= start.replace(tzinfo=None))
+        .order_by(HealthCheckRun.checked_at.asc())
+    ).all()
+
+    buckets: dict[str, dict[str, float]] = {}
+    for i in range(24):
+        key = (start + timedelta(hours=i)).strftime("%H:00")
+        buckets[key] = {"count": 0.0, "online": 0.0, "hs_ok": 0.0, "rtt_sum": 0.0}
+
+    for row in health_rows:
+        row_dt = row.checked_at.replace(tzinfo=timezone.utc)
+        key = row_dt.replace(minute=0, second=0, microsecond=0).strftime("%H:00")
+        if key not in buckets:
+            continue
+        item = buckets[key]
+        item["count"] += 1.0
+        item["online"] += 1.0 if (row.tcp_ok and row.handshake_ok) else 0.0
+        item["hs_ok"] += 1.0 if row.handshake_ok else 0.0
+        item["rtt_sum"] += float(row.rtt_ms or 0.0)
+
+    trends = []
+    for key, item in buckets.items():
+        count = item["count"]
+        trends.append(
+            {
+                "hour": key,
+                "online_ratio": round((item["online"] / count), 4) if count else 0.0,
+                "avg_rtt_ms": round((item["rtt_sum"] / count), 2) if count else 0.0,
+                "handshake_ok_ratio": round((item["hs_ok"] / count), 4) if count else 0.0,
+            }
+        )
+
+    return {
+        "kpi": {
+            "nodes_total": total,
+            "nodes_online": online,
+            "nodes_offline": offline,
+            "nodes_draining": draining,
+            "avg_rtt_ms": round(float(avg_rtt), 2) if avg_rtt is not None else 0.0,
+            "avg_handshake_rate": round(float(avg_hs), 4) if avg_hs is not None else 0.0,
+            "active_alerts_count": active_alerts,
+        },
+        "problem_nodes": problem_nodes,
+        "recent_alerts": recent_alerts,
+        "recent_audit": recent_audit,
+        "trends_24h": trends,
+    }
 
 
 @router.get("/metrics/summary")
