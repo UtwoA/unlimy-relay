@@ -1,4 +1,4 @@
-п»ї'use client';
+'use client';
 
 import { useEffect, useState } from 'react';
 
@@ -21,7 +21,7 @@ export default function ConfigPage() {
       const res = await fetch('/api/public/proxy', { cache: 'no-store' });
       if (!res.ok) {
         const body = await res.json().catch(() => ({}));
-        setError(body.detail || 'РџСЂРѕРєСЃРё РІСЂРµРјРµРЅРЅРѕ РЅРµРґРѕСЃС‚СѓРїРµРЅ, РїРѕРїСЂРѕР±СѓР№С‚Рµ РїРѕР·Р¶Рµ.');
+        setError(body.detail || 'Прокси временно недоступен, попробуйте позже.');
         setData(null);
         return;
       }
@@ -39,34 +39,53 @@ export default function ConfigPage() {
   return (
     <>
       <div className="card">
-        <h2>РљРѕРЅС„РёРі Telegram Proxy</h2>
-        <p>РџРѕР»СѓС‡РёС‚Рµ СЂР°Р±РѕС‡РёР№ fallback-РїСЂРѕРєСЃРё РІ РѕРґРёРЅ РєР»РёРє.</p>
-        <button onClick={load} disabled={loading}>{loading ? 'РћР±РЅРѕРІР»СЏРµРј...' : 'РћР±РЅРѕРІРёС‚СЊ РїСЂРѕРєСЃРё'}</button>
-        {error ? <p className="badge-off">{error}</p> : null}
-        {data ? (
-          <div style={{ marginTop: 12 }}>
-            <p><b>РќРѕРґР°:</b> {data.node}</p>
-            <p><b>TG:</b> <a href={data.tg_link}>{data.tg_link}</a></p>
-            <p><b>HTTPS:</b> <a href={data.https_link}>{data.https_link}</a></p>
-            <img alt="QR proxy" src={`data:image/png;base64,${data.qr_base64}`} style={{ width: 220, borderRadius: 12, border: '1px solid #dbe2df' }} />
-          </div>
-        ) : null}
+        <h1>Unlimy Relay</h1>
+        <p style={{ color: 'var(--muted)' }}>Открытая страница подключения Telegram Proxy. Админ-доступ расположен на скрытом маршруте.</p>
       </div>
 
-      <div className="card">
-        <h3>РљР°Рє РїРѕРґРєР»СЋС‡РёС‚СЊСЃСЏ</h3>
-        <div className="steps">
-          <div className="step"><b>1</b><span>РќР°Р¶РјРёС‚Рµ РЅР° TG-СЃСЃС‹Р»РєСѓ РёР»Рё РѕС‚СЃРєР°РЅРёСЂСѓР№С‚Рµ QR.</span></div>
-          <div className="step"><b>2</b><span>РџРѕРґС‚РІРµСЂРґРёС‚Рµ РґРѕР±Р°РІР»РµРЅРёРµ РїСЂРѕРєСЃРё РІ Telegram.</span></div>
-          <div className="step"><b>3</b><span>Р•СЃР»Рё РЅРµ РїРѕРґРєР»СЋС‡Р°РµС‚СЃСЏ, РѕР±РЅРѕРІРёС‚Рµ РїСЂРѕРєСЃРё Рё РїРѕРїСЂРѕР±СѓР№С‚Рµ СЃРЅРѕРІР°.</span></div>
+      <div className="config-hero">
+        <div className="card">
+          <div className="config-card-title">
+            <h2>Конфиг Proxy</h2>
+            <button onClick={load} disabled={loading}>{loading ? 'Обновляем...' : 'Обновить'}</button>
+          </div>
+
+          {error ? <p className="badge-off">{error}</p> : null}
+
+          {data ? (
+            <div className="config-meta">
+              <p><b>Нода:</b> {data.node}</p>
+              <p><b>TG-ссылка:</b> <a href={data.tg_link}>{data.tg_link}</a></p>
+              <p><b>HTTPS-ссылка:</b> <a href={data.https_link}>{data.https_link}</a></p>
+            </div>
+          ) : (
+            <p style={{ color: 'var(--muted)' }}>Ожидаем доступный endpoint...</p>
+          )}
+        </div>
+
+        <div className="card qr-wrap">
+          {data ? (
+            <img alt="QR proxy" src={`data:image/png;base64,${data.qr_base64}`} />
+          ) : (
+            <p style={{ color: 'var(--muted)' }}>QR появится после загрузки</p>
+          )}
         </div>
       </div>
 
       <div className="card">
-        <h3>РњРёРЅРё-FAQ</h3>
-        <p><b>Р­С‚Рѕ Р±РµР·РѕРїР°СЃРЅРѕ?</b> Р”Р°, СЃСЃС‹Р»РєР° РІРµРґРµС‚ С‚РѕР»СЊРєРѕ РЅР° РїСЂРѕРєСЃРё-СѓР·РµР» Р±РµР· РґРѕСЃС‚СѓРїР° Рє РІР°С€РёРј СЃРѕРѕР±С‰РµРЅРёСЏРј.</p>
-        <p><b>РџРѕС‡РµРјСѓ РёРЅРѕРіРґР° РЅРµ СЂР°Р±РѕС‚Р°РµС‚?</b> РќРѕРґС‹ СЂРѕС‚РёСЂСѓСЋС‚СЃСЏ. РќР°Р¶РјРёС‚Рµ В«РћР±РЅРѕРІРёС‚СЊ РїСЂРѕРєСЃРёВ» Рё РїРѕР»СѓС‡РёС‚Рµ СЃРІРµР¶РёР№ endpoint.</p>
-        <p><b>РќСѓР¶РµРЅ VPN?</b> РџСЂРѕРєСЃРё СЂР°СЃСЃС‡РёС‚Р°РЅ РєР°Рє fallback, РєРѕРіРґР° РѕСЃРЅРѕРІРЅРѕР№ VPN РЅРµРґРѕСЃС‚СѓРїРµРЅ.</p>
+        <h3>3 шага подключения</h3>
+        <div className="steps">
+          <div className="step"><b>1</b><span>Нажмите на TG-ссылку или сканируйте QR-код в Telegram.</span></div>
+          <div className="step"><b>2</b><span>Подтвердите добавление прокси в клиенте.</span></div>
+          <div className="step"><b>3</b><span>Если не подключается, нажмите «Обновить» и попробуйте снова.</span></div>
+        </div>
+      </div>
+
+      <div className="card faq">
+        <h3>Мини-FAQ</h3>
+        <p><b>Это безопасно?</b> Ссылка содержит только параметры подключения прокси.</p>
+        <p><b>Почему иногда не работает?</b> Ноды ротируются и часть может временно быть недоступной.</p>
+        <p><b>Нужен VPN?</b> Нет, это fallback-канал для Telegram, когда обычный маршрут недоступен.</p>
       </div>
     </>
   );

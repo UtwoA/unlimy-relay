@@ -1,7 +1,5 @@
-﻿import NodesTable from '../../components/nodes-table';
-import { requireAdminJson } from '../../lib/admin';
+import { redirect } from 'next/navigation';
 
-export default async function NodesPage() {
-  const nodes = await requireAdminJson('/nodes');
-  return <NodesTable initialNodes={nodes} />;
+export default function NodesRedirect() {
+  redirect('/admin/nodes');
 }
