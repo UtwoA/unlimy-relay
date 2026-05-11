@@ -69,10 +69,14 @@ class NodeService:
         result = adapter.restart_node(node.name)
         return result.message
 
-    def random_proxy(self) -> dict:
+    def random_proxy(self, exclude_node: str | None = None) -> dict:
         nodes = self.repo.healthy_nodes()
         if not nodes:
             raise ValueError("No healthy nodes")
+        if exclude_node:
+            alternative_nodes = [n for n in nodes if n.name != exclude_node]
+            if alternative_nodes:
+                nodes = alternative_nodes
         weighted = []
         for n in nodes:
             weight = max(1, int(n.score))

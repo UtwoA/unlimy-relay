@@ -9,24 +9,46 @@ type ProxyPayload = {
   qr_base64: string;
 };
 
+type PublicStatus = {
+  availability_pct: number;
+  active_nodes: number;
+  avg_latency_ms: number;
+  region: string;
+  provider: string;
+  protocol: string;
+  handshake: string;
+  reachability: string;
+};
+
 export default function ConfigPage() {
   const [data, setData] = useState<ProxyPayload | null>(null);
+  const [status, setStatus] = useState<PublicStatus | null>(null);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(true);
+  const [refreshCooldown, setRefreshCooldown] = useState(0);
 
   async function load() {
     setLoading(true);
     setError('');
     try {
-      const res = await fetch('/api/public/proxy', { cache: 'no-store' });
-      if (!res.ok) {
-        const body = await res.json().catch(() => ({}));
+      const [proxyRes, statusRes] = await Promise.all([
+        fetch('/api/public/proxy', { cache: 'no-store' }),
+        fetch('/api/public/status', { cache: 'no-store' }),
+      ]);
+
+      if (!proxyRes.ok) {
+        const body = await proxyRes.json().catch(() => ({}));
         setError(body.detail || 'Прокси временно недоступен, попробуйте позже.');
         setData(null);
-        return;
+      } else {
+        const payload = await proxyRes.json();
+        setData(payload);
       }
-      const payload = await res.json();
-      setData(payload);
+
+      if (statusRes.ok) {
+        const st = await statusRes.json();
+        setStatus(st);
+      }
     } finally {
       setLoading(false);
     }
@@ -36,38 +58,105 @@ export default function ConfigPage() {
     void load();
   }, []);
 
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setRefreshCooldown((prev) => (prev > 0 ? prev - 1 : 0));
+    }, 1000);
+    return () => clearInterval(timer);
+  }, []);
+
+  async function handleRefresh() {
+    if (refreshCooldown > 0 || loading) return;
+    setRefreshCooldown(60);
+    await load();
+  }
+
   return (
     <>
       <div className="card">
-        <h2>Конфиг Telegram Proxy</h2>
-        <p>Получите рабочий fallback-прокси в один клик.</p>
-        <button onClick={load} disabled={loading}>{loading ? 'Обновляем...' : 'Обновить прокси'}</button>
-        {error ? <p className="badge-off">{error}</p> : null}
-        {data ? (
-          <div style={{ marginTop: 12 }}>
-            <p><b>Нода:</b> {data.node}</p>
-            <p><b>TG:</b> <a href={data.tg_link}>{data.tg_link}</a></p>
-            <p><b>HTTPS:</b> <a href={data.https_link}>{data.https_link}</a></p>
-            <img alt="QR proxy" src={`data:image/png;base64,${data.qr_base64}`} style={{ width: 220, borderRadius: 12, border: '1px solid #dbe2df' }} />
-          </div>
-        ) : null}
+        <h1>Unlimy Relay</h1>
+        <p className="muted">Быстрое подключение к Telegram через резервный прокси</p>
       </div>
 
-      <div className="card">
-        <h3>Как подключиться</h3>
-        <div className="steps">
-          <div className="step"><b>1</b><span>Нажмите на TG-ссылку или отсканируйте QR.</span></div>
-          <div className="step"><b>2</b><span>Подтвердите добавление прокси в Telegram.</span></div>
-          <div className="step"><b>3</b><span>Если не подключается, обновите прокси и попробуйте снова.</span></div>
+      <div className="card stats-grid">
+        <div><b>Доступность:</b> {status ? `${status.availability_pct}%` : '-'}</div>
+        <div><b>Активных нод:</b> {status?.active_nodes ?? '-'}</div>
+        <div><b>Средняя задержка:</b> {status ? `${status.avg_latency_ms}мс` : '-'}</div>
+        <div><b>Регион:</b> {status?.region ?? '-'}</div>
+        <div><b>Провайдер:</b> {status?.provider ?? '-'}</div>
+        <div><b>Протокол:</b> {status?.protocol ?? 'EE/FakeTLS'}</div>
+      </div>
+
+      <div className="config-hero">
+        <div className="card">
+          <div className="config-card-title">
+            <h2>Конфиг Proxy</h2>
+            <button onClick={handleRefresh} disabled={loading || refreshCooldown > 0}>
+              {loading ? 'Обновляем...' : refreshCooldown > 0 ? `Обновить через ${refreshCooldown}с` : 'Обновить'}
+            </button>
+          </div>
+
+          {error ? <p className="badge-off">{error}</p> : null}
+
+          {data ? (
+            <div className="config-meta">
+              <p><b>Нода:</b> {data.node}</p>
+              <p><b>Handshake:</b> <span className={status?.handshake === 'ok' ? 'badge-on' : 'badge-off'}>{status?.handshake === 'ok' ? 'OK' : 'нестабильно'}</span></p>
+              <p><b>Доступность Telegram:</b> <span className={status?.reachability === 'healthy' ? 'badge-on' : 'badge-off'}>{status?.reachability === 'healthy' ? 'доступно' : 'нестабильно'}</span></p>
+              <p><b>TG-ссылка:</b> <a href={data.tg_link}>{data.tg_link}</a></p>
+              <p><b>HTTPS-ссылка:</b> <a href={data.https_link}>{data.https_link}</a></p>
+              <p>
+                <a className="cta-link" href={data.tg_link}>Подключить в Telegram</a>
+              </p>
+            </div>
+          ) : (
+            <p className="muted">Ожидаем доступный endpoint...</p>
+          )}
+        </div>
+
+        <div className="card qr-wrap">
+          {data ? (
+            <img alt="QR proxy" src={`data:image/png;base64,${data.qr_base64}`} />
+          ) : (
+            <p style={{ color: 'var(--muted)' }}>QR появится после загрузки</p>
+          )}
         </div>
       </div>
 
       <div className="card">
+        <h3>3 шага подключения</h3>
+        <div className="steps">
+          <div className="step"><b>1</b><span>Нажмите «Подключить в Telegram» или сканируйте QR-код.</span></div>
+          <div className="step"><b>2</b><span>Подтвердите добавление прокси в клиенте Telegram.</span></div>
+          <div className="step"><b>3</b><span>Если подключение не прошло, нажмите «Обновить» и повторите.</span></div>
+        </div>
+      </div>
+
+      <div className="card">
+        <h3>Что это?</h3>
+        <p style={{ color: 'var(--muted)' }}>
+          Это fallback-канал доступа к Telegram. Он помогает подключиться в случаях, когда обычный маршрут нестабилен.
+        </p>
+      </div>
+
+      <div className="card">
+        <h3>Совместимость клиентов</h3>
+        <p className="muted">Поддерживаются:</p>
+        <ul>
+          <li>Telegram Android</li>
+          <li>Telegram iOS</li>
+          <li>Telegram Desktop</li>
+          <li>Telegram macOS</li>
+        </ul>
+      </div>
+
+      <div className="card faq">
         <h3>Мини-FAQ</h3>
-        <p><b>Это безопасно?</b> Да, ссылка ведет только на прокси-узел без доступа к вашим сообщениям.</p>
-        <p><b>Почему иногда не работает?</b> Ноды ротируются. Нажмите «Обновить прокси» и получите свежий endpoint.</p>
-        <p><b>Нужен VPN?</b> Прокси рассчитан как fallback, когда основной VPN недоступен.</p>
+        <p><b>Это безопасно?</b> Ссылка содержит только параметры подключения прокси.</p>
+        <p><b>Почему иногда не работает?</b> Ноды ротируются и часть может временно быть недоступной.</p>
+        <p><b>Нужен VPN?</b> Нет, это fallback-канал для Telegram, когда обычный маршрут недоступен.</p>
       </div>
     </>
   );
 }
+

@@ -33,7 +33,7 @@ export default function NodesTable({ initialNodes }: { initialNodes: NodeRow[] }
       if (!res.ok) {
         const t = await res.text();
         setBanner({ type: 'err', msg: `${action} failed: ${t}` });
-        if (res.status === 401 || res.status === 403) router.push('/login');
+        if (res.status === 401 || res.status === 403) router.push('/admin/login');
         return;
       }
       setBanner({ type: 'ok', msg: `${action} done for node ${id}` });
@@ -52,7 +52,7 @@ export default function NodesTable({ initialNodes }: { initialNodes: NodeRow[] }
   async function refreshNodes() {
     const res = await fetch('/api/admin/nodes', { cache: 'no-store' });
     if (!res.ok) {
-      if (res.status === 401 || res.status === 403) router.push('/login');
+      if (res.status === 401 || res.status === 403) router.push('/admin/login');
       return;
     }
     const payload = await res.json();
@@ -99,3 +99,4 @@ export default function NodesTable({ initialNodes }: { initialNodes: NodeRow[] }
     </div>
   );
 }
+
