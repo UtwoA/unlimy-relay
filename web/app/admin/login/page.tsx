@@ -23,7 +23,7 @@ export default function AdminLoginPage() {
       });
       if (!res.ok) {
         const body = await res.json().catch(() => ({}));
-        setError(body.detail || 'Login failed');
+        setError(body.detail || 'Ошибка входа');
         return;
       }
       router.push('/admin');
@@ -35,18 +35,18 @@ export default function AdminLoginPage() {
 
   return (
     <div className="card admin-login">
-      <h2>Admin Login</h2>
+      <h2>Вход администратора</h2>
       <form onSubmit={submit}>
         <p>
-          <input value={username} onChange={(e) => setUsername(e.target.value)} placeholder="Username" />
+          <input value={username} onChange={(e) => setUsername(e.target.value)} placeholder="Логин" />
         </p>
         <p>
-          <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Password" />
+          <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Пароль" />
         </p>
         <p>
-          <input value={totpCode} onChange={(e) => setTotpCode(e.target.value)} placeholder="TOTP 6-digit" maxLength={6} />
+          <input value={totpCode} onChange={(e) => setTotpCode(e.target.value)} placeholder="Код TOTP (6 цифр)" maxLength={6} />
         </p>
-        <button type="submit" disabled={loading}>{loading ? 'Signing in...' : 'Sign in'}</button>
+        <button type="submit" disabled={loading}>{loading ? 'Входим...' : 'Войти'}</button>
       </form>
       {error ? <p className="badge-off">{error}</p> : null}
     </div>

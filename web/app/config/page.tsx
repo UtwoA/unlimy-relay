@@ -79,15 +79,16 @@ export default function ConfigPage() {
     <>
       <div className="card">
         <h1>Unlimy Relay</h1>
+        <p className="muted">Страница быстрого подключения к Telegram Proxy</p>
       </div>
 
       <div className="card stats-grid">
-        <div><b>Availability:</b> {status ? `${status.availability_pct}%` : '-'}</div>
-        <div><b>Active relay nodes:</b> {status?.active_nodes ?? '-'}</div>
-        <div><b>Average latency:</b> {status ? `${status.avg_latency_ms}ms` : '-'}</div>
-        <div><b>Region:</b> {status?.region ?? '-'}</div>
-        <div><b>Provider:</b> {status?.provider ?? '-'}</div>
-        <div><b>Protocol:</b> {status?.protocol ?? 'EE/FakeTLS'}</div>
+        <div><b>Доступность:</b> {status ? `${status.availability_pct}%` : '-'}</div>
+        <div><b>Активных нод:</b> {status?.active_nodes ?? '-'}</div>
+        <div><b>Средняя задержка:</b> {status ? `${status.avg_latency_ms}мс` : '-'}</div>
+        <div><b>Регион:</b> {status?.region ?? '-'}</div>
+        <div><b>Провайдер:</b> {status?.provider ?? '-'}</div>
+        <div><b>Протокол:</b> {status?.protocol ?? 'EE/FakeTLS'}</div>
       </div>
 
       <div className="config-hero">
@@ -99,13 +100,13 @@ export default function ConfigPage() {
 
           {error ? <p className="badge-off">{error}</p> : null}
 
-          <p><b>Next refresh in:</b> {fmtCountdown(countdown)}</p>
+          <p><b>Следующее автообновление через:</b> {fmtCountdown(countdown)}</p>
 
           {data ? (
             <div className="config-meta">
               <p><b>Нода:</b> {data.node}</p>
-              <p><b>Handshake:</b> <span className={status?.handshake === 'ok' ? 'badge-on' : 'badge-off'}>{status?.handshake ?? '-'}</span></p>
-              <p><b>Telegram reachability:</b> <span className={status?.reachability === 'healthy' ? 'badge-on' : 'badge-off'}>{status?.reachability ?? '-'}</span></p>
+              <p><b>Handshake:</b> <span className={status?.handshake === 'ok' ? 'badge-on' : 'badge-off'}>{status?.handshake === 'ok' ? 'OK' : 'нестабильно'}</span></p>
+              <p><b>Доступность Telegram:</b> <span className={status?.reachability === 'healthy' ? 'badge-on' : 'badge-off'}>{status?.reachability === 'healthy' ? 'доступно' : 'нестабильно'}</span></p>
               <p><b>TG-ссылка:</b> <a href={data.tg_link}>{data.tg_link}</a></p>
               <p><b>HTTPS-ссылка:</b> <a href={data.https_link}>{data.https_link}</a></p>
               <p>
@@ -113,7 +114,7 @@ export default function ConfigPage() {
               </p>
             </div>
           ) : (
-            <p style={{ color: 'var(--muted)' }}>Ожидаем доступный endpoint...</p>
+            <p className="muted">Ожидаем доступный endpoint...</p>
           )}
         </div>
 
@@ -137,14 +138,14 @@ export default function ConfigPage() {
 
       <div className="card">
         <h3>Что это?</h3>
-        <p style={{ color: 'var(--muted)' }}>
+            <p style={{ color: 'var(--muted)' }}>
           Это fallback-канал доступа к Telegram. Он помогает подключиться в случаях, когда обычный маршрут нестабилен.
         </p>
       </div>
 
       <div className="card">
-        <h3>Client compatibility</h3>
-        <p style={{ color: 'var(--muted)' }}>Supported:</p>
+        <h3>Совместимость клиентов</h3>
+        <p className="muted">Поддерживаются:</p>
         <ul>
           <li>Telegram Android</li>
           <li>Telegram iOS</li>

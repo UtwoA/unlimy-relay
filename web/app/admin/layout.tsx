@@ -11,15 +11,15 @@ export default async function AdminLayout({ children }: { children: React.ReactN
   return (
     <>
       <div className="card admin-head">
-        <h1>Relay Admin</h1>
+        <h1>Админ-панель Relay</h1>
         <div className="admin-nav">
-          <a href="/admin">Dashboard</a>
-          <a href="/admin/nodes">Nodes</a>
-          <a href="/admin/alerts">Alerts</a>
-          <a href="/admin/audit">Audit</a>
+          <a href="/admin">Дашборд</a>
+          <a href="/admin/nodes">Ноды</a>
+          <a href="/admin/alerts">Алерты</a>
+          <a href="/admin/audit">Аудит</a>
         </div>
         <form action="/api/auth/logout" method="post">
-          <button type="submit">Logout</button>
+          <button type="submit">Выйти</button>
         </form>
       </div>
       {children}

@@ -5,10 +5,10 @@ export default async function AdminAlertsPage() {
 
   return (
     <div className="card">
-      <h2>Alerts</h2>
+      <h2>Алерты</h2>
       <table>
         <thead>
-          <tr><th>Severity</th><th>Kind</th><th>Message</th><th>Time</th></tr>
+          <tr><th>Severity</th><th>Kind</th><th>Сообщение</th><th>Время</th></tr>
         </thead>
         <tbody>
           {alerts.map((a: any) => (
