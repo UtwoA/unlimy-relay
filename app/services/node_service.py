@@ -58,8 +58,7 @@ class NodeService:
         old = node.status
         node.status = NodeStatus.SCHEDULED.value
         node.age_hours = 0
-        current = decrypt_secret(node.secret_encrypted)
-        node.secret_encrypted = encrypt_secret(f"{current[:10]}{random.randint(100000, 999999)}")
+        # Keep existing secret unchanged. Truncating/mutating it breaks tg://proxy links.
         self.db.add(RotationEvent(node_id=node.id, trigger_type=trigger_type, old_status=old, new_status=node.status))
         self.db.commit()
         ROTATION_TOTAL.labels(trigger=trigger_type).inc()

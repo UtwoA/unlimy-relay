@@ -62,8 +62,7 @@ def rotate_node(node_id: int, db: Session = Depends(get_db)):
     node = db.get(Node, node_id)
     if not node:
         raise HTTPException(status_code=404, detail="Node not found")
-    secret = decrypt_secret(node.secret_encrypted)
-    node.secret_encrypted = encrypt_secret(f"{secret[:8]}{random.randint(100000, 999999)}")
+    # Keep existing secret unchanged; mutating it can produce invalid MTProxy links.
     node.created_at = datetime.utcnow()
     node.age_hours = 0
     db.commit()
