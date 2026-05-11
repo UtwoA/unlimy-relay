@@ -173,7 +173,12 @@ def proxy_random(request: Request, db: Session = Depends(get_db)):
     if cached:
         return cached
     try:
-        payload = NodeService(db).random_proxy()
+        previous_node = None
+        with _proxy_lock:
+            cached_entry = _proxy_cache.get(client_ip)
+            if cached_entry:
+                previous_node = cached_entry.get("payload", {}).get("node")
+        payload = NodeService(db).random_proxy(exclude_node=previous_node)
         _proxy_store(client_ip, payload)
         return payload
     except ValueError as exc:
