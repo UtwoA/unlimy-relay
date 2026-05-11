@@ -1,13 +1,23 @@
-﻿const API = process.env.MASTER_PUBLIC_API ?? 'http://localhost:8080/api/v1';
+﻿import { apiGet } from '../../lib/api';
 
 async function fetchNodes() {
-  const res = await fetch(`${API}/nodes`, { cache: 'no-store' });
-  if (!res.ok) return [];
+  const res = await apiGet('/nodes');
+  if (!res.ok) return null;
   return res.json();
 }
 
 export default async function NodesPage() {
   const nodes = await fetchNodes();
+  if (!nodes) {
+    return (
+      <div className="card">
+        <h2>Nodes</h2>
+        <p>Authentication required.</p>
+        <a href="/login">Go to login</a>
+      </div>
+    );
+  }
+
   return (
     <div className="card">
       <h2>Nodes</h2>
