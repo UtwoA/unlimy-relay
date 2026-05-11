@@ -72,13 +72,23 @@ function points(values: number[], min: number, max: number): string {
     .join(' ');
 }
 
-function TrendSpark({ title, values, suffix = '' }: { title: string; values: number[]; suffix?: string }) {
+function TrendSpark({
+  title,
+  values,
+  suffix = '',
+  className = '',
+}: {
+  title: string;
+  values: number[];
+  suffix?: string;
+  className?: string;
+}) {
   const min = Math.min(...values, 0);
   const max = Math.max(...values, 1);
   const last = values.length ? values[values.length - 1] : 0;
 
   return (
-    <div className="trend-card">
+    <div className={`trend-card ${className}`.trim()}>
       <div className="trend-head">
         <span>{title}</span>
         <b>{last.toFixed(2)}{suffix}</b>
@@ -215,9 +225,9 @@ export default function AdminDashboard() {
       </div>
 
       <div className="trend-grid">
-        <TrendSpark title="Доля онлайн" values={trends.online} suffix="%" />
-        <TrendSpark title="Средний RTT" values={trends.rtt} suffix="мс" />
-        <TrendSpark title="Успех handshake" values={trends.hs} suffix="%" />
+        <TrendSpark className="online" title="Доля онлайн" values={trends.online} suffix="%" />
+        <TrendSpark className="rtt" title="Средний RTT" values={trends.rtt} suffix="мс" />
+        <TrendSpark className="hs" title="Успех рукопожатия" values={trends.hs} suffix="%" />
       </div>
 
       <div className="card">
@@ -257,7 +267,7 @@ export default function AdminDashboard() {
         <div className="card">
           <h3>Последние алерты</h3>
           <table>
-            <thead><tr><th>Severity</th><th>Kind</th><th>Сообщение</th><th>Время</th></tr></thead>
+            <thead><tr><th>Серьезность</th><th>Тип</th><th>Сообщение</th><th>Время</th></tr></thead>
             <tbody>
               {data.recent_alerts.map((a) => (
                 <tr key={a.id}>
@@ -291,3 +301,4 @@ export default function AdminDashboard() {
     </>
   );
 }
+

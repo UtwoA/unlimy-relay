@@ -79,7 +79,7 @@ export default function ConfigPage() {
     <>
       <div className="card">
         <h1>Unlimy Relay</h1>
-        <p className="muted">Страница быстрого подключения к Telegram Proxy</p>
+        <p className="muted">Быстрое подключение к Telegram через резервный прокси</p>
       </div>
 
       <div className="card stats-grid">
@@ -163,3 +163,4 @@ export default function ConfigPage() {
     </>
   );
 }
+
