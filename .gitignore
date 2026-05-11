@@ -1,2 +1,46 @@
+﻿# Secrets and env
 .env
-app/__*
+.env.*
+!.env.example
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# Virtual envs
+.venv/
+venv/
+env/
+
+# Next.js / Node
+web/node_modules/
+web/.next/
+web/out/
+web/.turbo/
+web/.vercel/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# OS / editors
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+
+# Runtime artifacts
+celerybeat-schedule
+*.pid
+*.log
+
+# Build artifacts
+build/
+dist/
