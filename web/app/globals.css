@@ -10,8 +10,13 @@
 body { margin: 0; font-family: "IBM Plex Sans", "Segoe UI", sans-serif; background: radial-gradient(circle at 20% 0%, #dff3ea, var(--bg)); color: var(--ink); }
 main { max-width: 1100px; margin: 0 auto; padding: 24px; }
 .card { background: var(--panel); border-radius: 16px; padding: 16px; box-shadow: 0 8px 24px rgba(20, 30, 28, 0.08); margin-bottom: 16px; }
-a { color: var(--accent); text-decoration: none; margin-right: 12px; }
+a { color: var(--accent); text-decoration: none; margin-right: 12px; overflow-wrap: anywhere; }
 table { width: 100%; border-collapse: collapse; }
-th, td { text-align: left; padding: 8px; border-bottom: 1px solid #dbe2df; }
+th, td { text-align: left; padding: 8px; border-bottom: 1px solid #dbe2df; vertical-align: top; }
+button { border: 1px solid #c7d7d3; background: #fff; border-radius: 8px; padding: 6px 10px; cursor: pointer; }
+button:disabled { opacity: 0.6; cursor: not-allowed; }
 .badge-on { color: #0d7a37; font-weight: 700; }
 .badge-off { color: var(--alert); font-weight: 700; }
+.steps { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; }
+.step { border: 1px solid #dbe2df; border-radius: 12px; padding: 12px; background: #f9fdfb; display: flex; gap: 8px; align-items: flex-start; }
+.step b { display: inline-flex; width: 24px; height: 24px; border-radius: 999px; background: var(--accent); color: #fff; align-items: center; justify-content: center; font-size: 12px; flex: 0 0 24px; }
