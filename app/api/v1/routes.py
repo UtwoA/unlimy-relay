@@ -1,11 +1,12 @@
 ﻿import base64
+from datetime import datetime, timezone
+from threading import Lock
 
 from fastapi import APIRouter, Depends, HTTPException, Request
-from fastapi.responses import Response
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
-from app.api.deps import check_ip_allowlist, rate_limit_auth, require_auth, require_roles
+from app.api.deps import check_ip_allowlist, rate_limit_auth, require_roles
 from app.db.session import get_db
 from app.infra.links import build_https_proxy_link, build_tg_proxy_link, qr_png_bytes
 from app.infra.security import decrypt_secret
@@ -31,6 +32,35 @@ from app.services.node_service import NodeService
 from app.workers.celery_app import celery_app
 
 router = APIRouter(prefix="/api/v1", tags=["v1"])
+
+_proxy_lock = Lock()
+_proxy_cache: dict[str, dict] = {}
+_proxy_rate: dict[str, list[datetime]] = {}
+_PROXY_CACHE_SECONDS = 60
+_PROXY_RATE_WINDOW_SECONDS = 60
+_PROXY_RATE_MAX = 30
+
+
+def _proxy_guard(client_ip: str):
+    now = datetime.now(tz=timezone.utc)
+    with _proxy_lock:
+        attempts = _proxy_rate.setdefault(client_ip, [])
+        attempts[:] = [x for x in attempts if (now - x).total_seconds() <= _PROXY_RATE_WINDOW_SECONDS]
+        if len(attempts) >= _PROXY_RATE_MAX:
+            raise HTTPException(status_code=429, detail="Too many proxy requests")
+        attempts.append(now)
+
+        cached = _proxy_cache.get(client_ip)
+        if cached:
+            age = (now - cached["at"]).total_seconds()
+            if age <= _PROXY_CACHE_SECONDS:
+                return cached["payload"]
+        return None
+
+
+def _proxy_store(client_ip: str, payload: dict):
+    with _proxy_lock:
+        _proxy_cache[client_ip] = {"at": datetime.now(tz=timezone.utc), "payload": payload}
 
 
 @router.post("/auth/token", response_model=TokenResponse)
@@ -136,9 +166,15 @@ def check_node(node_id: int, _: dict = Depends(require_roles(Role.OPERATOR.value
 
 
 @router.get("/proxy/random", response_model=ProxyOut)
-def proxy_random(db: Session = Depends(get_db)):
+def proxy_random(request: Request, db: Session = Depends(get_db)):
+    client_ip = request.client.host if request.client else "unknown"
+    cached = _proxy_guard(client_ip)
+    if cached:
+        return cached
     try:
-        return NodeService(db).random_proxy()
+        payload = NodeService(db).random_proxy()
+        _proxy_store(client_ip, payload)
+        return payload
     except ValueError as exc:
         raise HTTPException(status_code=503, detail=str(exc)) from exc
 
@@ -160,8 +196,8 @@ def proxy_alive(db: Session = Depends(get_db)):
 
 
 @router.get("/proxy/random/qr", response_model=ProxyWithQrOut)
-def proxy_random_qr(db: Session = Depends(get_db)):
-    proxy = NodeService(db).random_proxy()
+def proxy_random_qr(request: Request, db: Session = Depends(get_db)):
+    proxy = proxy_random(request, db)
     qr = base64.b64encode(qr_png_bytes(proxy["tg_link"])).decode("utf-8")
     return ProxyWithQrOut(**proxy, qr_base64=qr)
 

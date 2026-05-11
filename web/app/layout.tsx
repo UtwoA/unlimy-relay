@@ -8,6 +8,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <main>
           <div className="card">
             <h1>Unlimy Relay Panel</h1>
+            <a href="/config">Public Config</a>
             <a href="/">Dashboard</a>
             <a href="/nodes">Nodes</a>
             <a href="/alerts">Alerts</a>

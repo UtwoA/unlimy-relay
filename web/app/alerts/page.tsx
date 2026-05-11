@@ -1,22 +1,7 @@
-﻿import { apiGet } from '../../lib/api';
-
-async function fetchAlerts() {
-  const res = await apiGet('/alerts');
-  if (!res.ok) return null;
-  return res.json();
-}
+﻿import { requireAdminJson } from '../../lib/admin';
 
 export default async function AlertsPage() {
-  const alerts = await fetchAlerts();
-  if (!alerts) {
-    return (
-      <div className="card">
-        <h2>Alerts</h2>
-        <p>Authentication required.</p>
-        <a href="/login">Go to login</a>
-      </div>
-    );
-  }
+  const alerts = await requireAdminJson('/alerts');
 
   return (
     <div className="card">

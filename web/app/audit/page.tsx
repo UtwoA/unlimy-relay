@@ -1,22 +1,7 @@
-﻿import { apiGet } from '../../lib/api';
-
-async function fetchAudit() {
-  const res = await apiGet('/audit');
-  if (!res.ok) return null;
-  return res.json();
-}
+﻿import { requireAdminJson } from '../../lib/admin';
 
 export default async function AuditPage() {
-  const logs = await fetchAudit();
-  if (!logs) {
-    return (
-      <div className="card">
-        <h2>Access and Audit</h2>
-        <p>Admin authentication required.</p>
-        <a href="/login">Go to login</a>
-      </div>
-    );
-  }
+  const logs = await requireAdminJson('/audit');
 
   return (
     <div className="card">
