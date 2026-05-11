@@ -44,3 +44,9 @@ celerybeat-schedule
 # Build artifacts
 build/
 dist/
+
+# Local tool/cache artifacts
+*.sqlite3
+*.db
+*.tmp
+*.swp
