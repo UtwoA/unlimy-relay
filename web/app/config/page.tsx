@@ -1,6 +1,6 @@
 ﻿'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
 
 type ProxyPayload = {
   node: string;
@@ -18,21 +18,14 @@ type PublicStatus = {
   protocol: string;
   handshake: string;
   reachability: string;
-  rotation_seconds: number;
 };
-
-function fmtCountdown(seconds: number): string {
-  const mm = Math.floor(seconds / 60).toString().padStart(2, '0');
-  const ss = Math.floor(seconds % 60).toString().padStart(2, '0');
-  return `${mm}:${ss}`;
-}
 
 export default function ConfigPage() {
   const [data, setData] = useState<ProxyPayload | null>(null);
   const [status, setStatus] = useState<PublicStatus | null>(null);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(true);
-  const [countdown, setCountdown] = useState(1800);
+  const [refreshCooldown, setRefreshCooldown] = useState(0);
 
   async function load() {
     setLoading(true);
@@ -55,7 +48,6 @@ export default function ConfigPage() {
       if (statusRes.ok) {
         const st = await statusRes.json();
         setStatus(st);
-        setCountdown(st.rotation_seconds || 1800);
       }
     } finally {
       setLoading(false);
@@ -68,12 +60,16 @@ export default function ConfigPage() {
 
   useEffect(() => {
     const timer = setInterval(() => {
-      setCountdown((prev) => (prev > 0 ? prev - 1 : 0));
+      setRefreshCooldown((prev) => (prev > 0 ? prev - 1 : 0));
     }, 1000);
     return () => clearInterval(timer);
   }, []);
 
-  const canConnect = useMemo(() => Boolean(data?.tg_link), [data]);
+  async function handleRefresh() {
+    if (refreshCooldown > 0 || loading) return;
+    setRefreshCooldown(60);
+    await load();
+  }
 
   return (
     <>
@@ -95,12 +91,12 @@ export default function ConfigPage() {
         <div className="card">
           <div className="config-card-title">
             <h2>Конфиг Proxy</h2>
-            <button onClick={load} disabled={loading}>{loading ? 'Обновляем...' : 'Обновить'}</button>
+            <button onClick={handleRefresh} disabled={loading || refreshCooldown > 0}>
+              {loading ? 'Обновляем...' : refreshCooldown > 0 ? `Обновить через ${refreshCooldown}с` : 'Обновить'}
+            </button>
           </div>
 
           {error ? <p className="badge-off">{error}</p> : null}
-
-          <p><b>Следующее автообновление через:</b> {fmtCountdown(countdown)}</p>
 
           {data ? (
             <div className="config-meta">
@@ -138,7 +134,7 @@ export default function ConfigPage() {
 
       <div className="card">
         <h3>Что это?</h3>
-            <p style={{ color: 'var(--muted)' }}>
+        <p style={{ color: 'var(--muted)' }}>
           Это fallback-канал доступа к Telegram. Он помогает подключиться в случаях, когда обычный маршрут нестабилен.
         </p>
       </div>
@@ -163,4 +159,3 @@ export default function ConfigPage() {
     </>
   );
 }
-
