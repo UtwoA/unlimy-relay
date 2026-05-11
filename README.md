@@ -11,74 +11,74 @@
 ![Grafana](https://img.shields.io/badge/Grafana-F46800?style=for-the-badge&logo=grafana&logoColor=white)
 ![Telegram Proxy](https://img.shields.io/badge/Telegram_Proxy-1F9BFF?style=for-the-badge&logo=telegram&logoColor=white)
 
-Unlimy Relay is a production-grade Telegram fallback platform for operating resilient proxy infrastructure at scale.
+Unlimy Relay — production-grade платформа для отказоустойчивой Telegram fallback-инфраструктуры.
 
-It combines a secure control plane, operator-focused automation, and user-facing delivery into one system that is fast to deploy, easy to operate, and hard to break.
+Система объединяет безопасный control plane, удобную операционную панель и публичную выдачу конфигов в одном контуре: быстро разворачивается, просто поддерживается и устойчива в проде.
 
-## Why This Project
+## Зачем этот проект
 
-Most proxy setups fail in real operations, not in demos:
-- no lifecycle controls,
-- weak observability,
-- manual incident handling,
-- poor security boundaries,
-- no operator UX.
+Большинство proxy-решений ломаются не на демо, а в реальной эксплуатации:
+- нет полного lifecycle-управления нодами,
+- слабая наблюдаемость,
+- ручная и медленная реакция на инциденты,
+- размытые security-границы,
+- слабый UX для оператора.
 
-Unlimy Relay solves this with an opinionated architecture built for real infrastructure teams.
+Unlimy Relay закрывает эти проблемы за счет архитектуры, заточенной под реальный ops-поток.
 
-## Core Capabilities
+## Ключевые возможности
 
-- Node lifecycle management: create, update, enable/disable, check, rotate, restart, delete
-- Public proxy delivery: random healthy proxy + QR generation
-- Admin control surface: JWT + RBAC + TOTP protected routes and UI
-- Operational automation: health checks, scheduled tasks, rotation jobs
-- Security boundaries: authenticated admin API, public-safe proxy endpoints only
-- Auditability: action logs for critical operations
-- Anti-abuse: request rate limiting + response cooldown/cache on public proxy issuance
-- Dashboard observability: KPIs, problem nodes, recent alerts/audit, 24h trends
+- Lifecycle нод: create, update, enable/disable, check, rotate, restart, delete
+- Публичная выдача прокси: random healthy proxy + QR
+- Защищенный админ-контур: JWT + RBAC + TOTP
+- Операционная автоматизация: health checks, планировщик задач, rotation jobs
+- Аудит действий операторов/админов
+- Антиабуз: rate limit + cooldown/cache для публичной выдачи
+- Операционный дашборд: KPI, проблемные ноды, последние алерты/аудит, тренды за 24ч
 
-## Architecture
+## Архитектура
 
 - `master-api` (FastAPI)
-  - `/api/v1` control and data plane
-  - auth, RBAC, audit, node orchestration, proxy issuance
+  - `/api/v1` control/data plane
+  - auth, RBAC, audit, orchestration нод, выдача proxy
 - `web` (Next.js)
-  - public route: `/config`
-  - admin routes: `/admin/*`
+  - public: `/config`
+  - admin: `/admin/*`
 - `worker` + `beat` (Celery)
-  - periodic health/rotation and background jobs
+  - фоновые проверки и ротации
 - `postgres` + `redis`
-  - state + queue/backing services
+  - состояние и очередь
 - `prometheus` + `grafana`
-  - metrics and dashboards
+  - метрики и мониторинг
 - `bot-service`
-  - optional Telegram automation/webhook integration
+  - Telegram automation/webhook (опционально)
 
-## Security Model
+## Модель безопасности
 
-- Authentication: JWT tokens
-- Second factor: TOTP for admin login
-- Authorization: role-based access (`viewer`, `operator`, `admin`)
-- Public boundary: only safe proxy endpoints exposed publicly
-- Admin boundary: node/jobs/audit/alerts endpoints require valid token
-- Infrastructure hardening ready: fail2ban, firewall policy, DNS-over-TLS, kernel/network tuning
+- Аутентификация: JWT
+- 2FA: TOTP для входа администратора
+- Авторизация: роли `viewer`, `operator`, `admin`
+- Public boundary: наружу только безопасные proxy-endpoints
+- Admin boundary: `/nodes`, `/jobs`, `/alerts`, `/audit` только с токеном
+- Инфраструктурный hardening: fail2ban, firewall, DNS-over-TLS, sysctl tuning
 
-## Public vs Admin Routing
+## Маршрутизация Public/Admin
 
-Single-domain path split is supported and recommended:
+Рекомендуемая стратегия: один домен, разные пути.
+
 - Public UX: `/config`
 - Admin UX: `/admin/login`, `/admin`, `/admin/nodes`, `/admin/alerts`, `/admin/audit`
 
-This keeps onboarding simple for users while preserving operational isolation.
+Такой split сохраняет простой onboarding для пользователей и жесткие границы доступа для админки.
 
-## API Highlights
+## Основные API
 
-Public:
+Публичные:
 - `GET /api/v1/proxy/random`
 - `GET /api/v1/proxy/random/qr`
 - `GET /api/v1/proxy/public-status`
 
-Admin (auth required):
+Админские (требуют авторизацию):
 - `POST /api/v1/auth/token`
 - `GET /api/v1/nodes`
 - `PATCH /api/v1/nodes/{id}`
@@ -89,30 +89,30 @@ Admin (auth required):
 - `GET /api/v1/alerts`
 - `GET /api/v1/audit`
 
-## Quick Start (Dev)
+## Быстрый старт (dev)
 
-1. Create env file:
+1. Создать env-файл:
 ```bash
 cp .env.example .env
 ```
 
-2. Set required values in `.env`:
+2. Заполнить обязательные переменные в `.env`:
 - `JWT_SECRET`
 - `ADMIN_USER`, `ADMIN_PASSWORD`, `ADMIN_TOTP_SECRET`
-- `TELEGRAM_BOT_TOKEN` (optional, if bot is enabled)
+- `TELEGRAM_BOT_TOKEN` (опционально, если используется bot)
 
-3. Start stack:
+3. Запуск:
 ```bash
 docker compose up -d --build
 ```
 
-## Production Start
+## Прод-запуск
 
 ```bash
 docker compose -p relay -f docker-compose.prod.yml up -d --build
 ```
 
-## Default Service Ports (prod compose)
+## Порты (prod compose)
 
 - Web: `13000`
 - API: `18080`
@@ -120,30 +120,28 @@ docker compose -p relay -f docker-compose.prod.yml up -d --build
 - Prometheus: `19090`
 - Grafana: `13001`
 
-## Operational Principles
+## Операционные принципы
 
-- Prefer explicit audit trails for admin actions
-- Keep public payloads minimal and safe
-- Fail safely: degrade gracefully when healthy nodes are low
-- Optimize for operator speed without exposing internal secrets
-- Ship in small PRs with clear ownership and conflict-resistant scope
+- Явный audit trail для критичных действий
+- Минимальный и безопасный публичный payload
+- Fail-safe поведение при деградации healthy-пула
+- Максимальная скорость оператора без утечки внутренних данных
+- Маленькие PR с четкой зоной ответственности
 
-## Roadmap Direction
+## Roadmap
 
-- richer node metadata and quality scoring
-- stronger policy engine for routing/selection
-- advanced anti-abuse (adaptive heuristics)
-- admin UX depth comparable to top-tier relay panels
-- full secret encryption lifecycle (KMS/Vault-backed)
+- углубление качества node-scoring и маршрутизации
+- расширенный policy engine
+- адаптивный антиабуз
+- дальнейшее развитие админ-дашборда
+- усиление секрет-менеджмента (KMS/Vault)
 
-## Quality Standard
+## Стандарт качества
 
-This project is built with production posture first:
-- security-aware defaults,
-- operational clarity,
-- real-world automation,
-- strict separation of public and admin concerns.
+Unlimy Relay строится с приоритетом production-практик:
+- secure-by-default,
+- прозрачная эксплуатация,
+- автоматизация рутинных операций,
+- строгая граница между public и admin контурами.
 
-If you are building serious Telegram fallback infrastructure, this is the right foundation.
-
-
+Если вам нужен надежный фундамент для Telegram fallback-инфраструктуры, этот проект создан именно для этого.
