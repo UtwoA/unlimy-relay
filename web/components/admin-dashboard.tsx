@@ -96,11 +96,23 @@ export default function AdminDashboard() {
   const [busy, setBusy] = useState('');
   const [banner, setBanner] = useState<{ type: 'ok' | 'err'; msg: string } | null>(null);
 
+  const actionTitle: Record<string, string> = {
+    check: 'проверка',
+    rotate: 'ротация',
+    restart: 'рестарт',
+    disable: 'отключение',
+    enable: 'включение',
+  };
+  const jobTitle: Record<string, string> = {
+    health: 'health-check',
+    rotation: 'rotation',
+  };
+
   async function load() {
     const res = await fetch('/api/admin/overview', { cache: 'no-store' });
     if (!res.ok) {
       const t = await res.text();
-      setBanner({ type: 'err', msg: `overview failed: ${t}` });
+      setBanner({ type: 'err', msg: `Ошибка загрузки обзора: ${t}` });
       return;
     }
     const payload = await res.json();
@@ -133,10 +145,10 @@ export default function AdminDashboard() {
       const res = await fetch(`/api/admin/jobs/${job}`, { method: 'POST' });
       if (!res.ok) {
         const t = await res.text();
-        setBanner({ type: 'err', msg: `${job} job failed: ${t}` });
+        setBanner({ type: 'err', msg: `Не удалось запустить задачу ${jobTitle[job]}: ${t}` });
         return;
       }
-      setBanner({ type: 'ok', msg: `${job} job queued` });
+      setBanner({ type: 'ok', msg: `Задача ${jobTitle[job]} отправлена` });
       await load();
     } finally {
       setBusy('');
@@ -150,10 +162,10 @@ export default function AdminDashboard() {
       const res = await fetch(`/api/admin/nodes/${id}/${action}`, { method: 'POST' });
       if (!res.ok) {
         const t = await res.text();
-        setBanner({ type: 'err', msg: `${action} failed for node ${id}: ${t}` });
+        setBanner({ type: 'err', msg: `Действие "${actionTitle[action]}" для ноды ${id} не выполнено: ${t}` });
         return;
       }
-      setBanner({ type: 'ok', msg: `${action} done for node ${id}` });
+      setBanner({ type: 'ok', msg: `Действие "${actionTitle[action]}" выполнено для ноды ${id}` });
       await load();
     } finally {
       setBusy('');
@@ -170,49 +182,50 @@ export default function AdminDashboard() {
   }, [data]);
 
   if (loading) {
-    return <div className="card"><p>Loading admin overview...</p></div>;
+    return <div className="card"><p>Загружаем обзор админ-панели...</p></div>;
   }
 
   if (!data) {
-    return <div className="card"><p>Failed to load overview.</p></div>;
+    return <div className="card"><p>Не удалось загрузить данные дашборда.</p></div>;
   }
 
   return (
     <>
       <div className="card">
         <div className="config-card-title">
-          <h2>Operations Overview</h2>
+          <h2>Операционный дашборд</h2>
           <div style={{ display: 'flex', gap: 8 }}>
-            <button disabled={busy === 'job:health'} onClick={() => runJob('health')}>Run Health Checks</button>
-            <button disabled={busy === 'job:rotation'} onClick={() => runJob('rotation')}>Run Rotation Job</button>
-            <button onClick={() => void load()}>Refresh</button>
+            <button disabled={busy === 'job:health'} onClick={() => runJob('health')}>Запустить health-check</button>
+            <button disabled={busy === 'job:rotation'} onClick={() => runJob('rotation')}>Запустить rotation job</button>
+            <button onClick={() => void load()}>Обновить</button>
           </div>
         </div>
+        <p className="muted">Автообновление каждые 15 секунд</p>
         {banner ? <p className={banner.type === 'ok' ? 'badge-on' : 'badge-off'}>{banner.msg}</p> : null}
       </div>
 
       <div className="kpi-grid">
-        <div className="card kpi"><span>Total Nodes</span><b>{data.kpi.nodes_total}</b></div>
-        <div className="card kpi"><span>Online</span><b>{data.kpi.nodes_online}</b></div>
-        <div className="card kpi"><span>Offline</span><b>{data.kpi.nodes_offline}</b></div>
-        <div className="card kpi"><span>Draining</span><b>{data.kpi.nodes_draining}</b></div>
-        <div className="card kpi"><span>Avg RTT</span><b>{data.kpi.avg_rtt_ms.toFixed(1)} ms</b></div>
-        <div className="card kpi"><span>Handshake</span><b>{(data.kpi.avg_handshake_rate * 100).toFixed(1)}%</b></div>
-        <div className="card kpi"><span>Alerts (24h)</span><b>{data.kpi.active_alerts_count}</b></div>
+        <div className="card kpi"><span>Всего нод</span><b>{data.kpi.nodes_total}</b></div>
+        <div className="card kpi"><span>Онлайн</span><b>{data.kpi.nodes_online}</b></div>
+        <div className="card kpi"><span>Офлайн</span><b>{data.kpi.nodes_offline}</b></div>
+        <div className="card kpi"><span>На выводе</span><b>{data.kpi.nodes_draining}</b></div>
+        <div className="card kpi"><span>Средний RTT</span><b>{data.kpi.avg_rtt_ms.toFixed(1)} мс</b></div>
+        <div className="card kpi"><span>Успех Handshake</span><b>{(data.kpi.avg_handshake_rate * 100).toFixed(1)}%</b></div>
+        <div className="card kpi"><span>Алерты (24ч)</span><b>{data.kpi.active_alerts_count}</b></div>
       </div>
 
       <div className="trend-grid">
-        <TrendSpark title="Online Ratio" values={trends.online} suffix="%" />
-        <TrendSpark title="Avg RTT" values={trends.rtt} suffix="ms" />
-        <TrendSpark title="Handshake OK" values={trends.hs} suffix="%" />
+        <TrendSpark title="Доля онлайн" values={trends.online} suffix="%" />
+        <TrendSpark title="Средний RTT" values={trends.rtt} suffix="мс" />
+        <TrendSpark title="Успех handshake" values={trends.hs} suffix="%" />
       </div>
 
       <div className="card">
-        <h3>Problem Nodes</h3>
+        <h3>Проблемные ноды</h3>
         <table>
           <thead>
             <tr>
-              <th>ID</th><th>Name</th><th>Status</th><th>Region</th><th>Provider</th><th>RTT</th><th>Handshake</th><th>Score</th><th>Actions</th>
+              <th>ID</th><th>Имя</th><th>Статус</th><th>Регион</th><th>Провайдер</th><th>RTT</th><th>Handshake</th><th>Оценка</th><th>Действия</th>
             </tr>
           </thead>
           <tbody>
@@ -227,11 +240,11 @@ export default function AdminDashboard() {
                 <td>{(n.handshake_success_rate * 100).toFixed(1)}%</td>
                 <td>{n.score.toFixed(1)}</td>
                 <td>
-                  <button onClick={() => runNodeAction(n.id, 'check')} disabled={busy === `node:${n.id}:check`}>check</button>{' '}
-                  <button onClick={() => runNodeAction(n.id, 'rotate')} disabled={busy === `node:${n.id}:rotate`}>rotate</button>{' '}
-                  <button onClick={() => runNodeAction(n.id, 'restart')} disabled={busy === `node:${n.id}:restart`}>restart</button>{' '}
+                  <button onClick={() => runNodeAction(n.id, 'check')} disabled={busy === `node:${n.id}:check`}>проверка</button>{' '}
+                  <button onClick={() => runNodeAction(n.id, 'rotate')} disabled={busy === `node:${n.id}:rotate`}>ротация</button>{' '}
+                  <button onClick={() => runNodeAction(n.id, 'restart')} disabled={busy === `node:${n.id}:restart`}>рестарт</button>{' '}
                   <button onClick={() => runNodeAction(n.id, n.is_enabled ? 'disable' : 'enable')} disabled={busy === `node:${n.id}:${n.is_enabled ? 'disable' : 'enable'}`}>
-                    {n.is_enabled ? 'disable' : 'enable'}
+                    {n.is_enabled ? 'выкл' : 'вкл'}
                   </button>
                 </td>
               </tr>
@@ -242,9 +255,9 @@ export default function AdminDashboard() {
 
       <div className="split-grid">
         <div className="card">
-          <h3>Recent Alerts</h3>
+          <h3>Последние алерты</h3>
           <table>
-            <thead><tr><th>Severity</th><th>Kind</th><th>Message</th><th>Time</th></tr></thead>
+            <thead><tr><th>Severity</th><th>Kind</th><th>Сообщение</th><th>Время</th></tr></thead>
             <tbody>
               {data.recent_alerts.map((a) => (
                 <tr key={a.id}>
@@ -259,9 +272,9 @@ export default function AdminDashboard() {
         </div>
 
         <div className="card">
-          <h3>Recent Audit</h3>
+          <h3>Последние действия</h3>
           <table>
-            <thead><tr><th>Actor</th><th>Action</th><th>Object</th><th>Time</th></tr></thead>
+            <thead><tr><th>Кто</th><th>Действие</th><th>Объект</th><th>Время</th></tr></thead>
             <tbody>
               {data.recent_audit.map((a) => (
                 <tr key={a.id}>
