@@ -1,4 +1,4 @@
-import { requireAdminJson } from '../../lib/admin';
+﻿import { requireAdminJson } from '../../lib/admin';
 
 export default async function AdminDashboardPage() {
   const summary = await requireAdminJson('/metrics/summary');
@@ -12,3 +12,4 @@ export default async function AdminDashboardPage() {
     </div>
   );
 }
+

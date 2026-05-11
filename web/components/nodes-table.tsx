@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useRouter } from 'next/navigation';
 import { useMemo, useState } from 'react';
@@ -99,3 +99,4 @@ export default function NodesTable({ initialNodes }: { initialNodes: NodeRow[] }
     </div>
   );
 }
+

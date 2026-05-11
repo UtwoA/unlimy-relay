@@ -1,4 +1,4 @@
-import { requireAdminJson } from '../../../lib/admin';
+﻿import { requireAdminJson } from '../../../lib/admin';
 
 export default async function AdminAlertsPage() {
   const alerts = await requireAdminJson('/alerts');
@@ -24,3 +24,4 @@ export default async function AdminAlertsPage() {
     </div>
   );
 }
+

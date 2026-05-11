@@ -1,4 +1,4 @@
-import './globals.css';
+﻿import './globals.css';
 import React from 'react';
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
@@ -10,3 +10,4 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     </html>
   );
 }
+

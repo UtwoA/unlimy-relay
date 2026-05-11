@@ -1,4 +1,4 @@
-import { cookies } from 'next/headers';
+﻿import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
 import React from 'react';
 
@@ -26,3 +26,4 @@ export default async function AdminLayout({ children }: { children: React.ReactN
     </>
   );
 }
+
