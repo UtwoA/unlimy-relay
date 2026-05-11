@@ -1,4 +1,4 @@
-'use client';
+п»ї'use client';
 
 import { useEffect, useState } from 'react';
 
@@ -21,7 +21,7 @@ export default function ConfigPage() {
       const res = await fetch('/api/public/proxy', { cache: 'no-store' });
       if (!res.ok) {
         const body = await res.json().catch(() => ({}));
-        setError(body.detail || 'Прокси временно недоступен, попробуйте позже.');
+        setError(body.detail || 'РџСЂРѕРєСЃРё РІСЂРµРјРµРЅРЅРѕ РЅРµРґРѕСЃС‚СѓРїРµРЅ, РїРѕРїСЂРѕР±СѓР№С‚Рµ РїРѕР·Р¶Рµ.');
         setData(null);
         return;
       }
@@ -40,26 +40,26 @@ export default function ConfigPage() {
     <>
       <div className="card">
         <h1>Unlimy Relay</h1>
-        <p style={{ color: 'var(--muted)' }}>Открытая страница подключения Telegram Proxy. Админ-доступ расположен на скрытом маршруте.</p>
+        <p style={{ color: 'var(--muted)' }}>РћС‚РєСЂС‹С‚Р°СЏ СЃС‚СЂР°РЅРёС†Р° РїРѕРґРєР»СЋС‡РµРЅРёСЏ Telegram Proxy. РђРґРјРёРЅ-РґРѕСЃС‚СѓРї СЂР°СЃРїРѕР»РѕР¶РµРЅ РЅР° СЃРєСЂС‹С‚РѕРј РјР°СЂС€СЂСѓС‚Рµ.</p>
       </div>
 
       <div className="config-hero">
         <div className="card">
           <div className="config-card-title">
-            <h2>Конфиг Proxy</h2>
-            <button onClick={load} disabled={loading}>{loading ? 'Обновляем...' : 'Обновить'}</button>
+            <h2>РљРѕРЅС„РёРі Proxy</h2>
+            <button onClick={load} disabled={loading}>{loading ? 'РћР±РЅРѕРІР»СЏРµРј...' : 'РћР±РЅРѕРІРёС‚СЊ'}</button>
           </div>
 
           {error ? <p className="badge-off">{error}</p> : null}
 
           {data ? (
             <div className="config-meta">
-              <p><b>Нода:</b> {data.node}</p>
-              <p><b>TG-ссылка:</b> <a href={data.tg_link}>{data.tg_link}</a></p>
-              <p><b>HTTPS-ссылка:</b> <a href={data.https_link}>{data.https_link}</a></p>
+              <p><b>РќРѕРґР°:</b> {data.node}</p>
+              <p><b>TG-СЃСЃС‹Р»РєР°:</b> <a href={data.tg_link}>{data.tg_link}</a></p>
+              <p><b>HTTPS-СЃСЃС‹Р»РєР°:</b> <a href={data.https_link}>{data.https_link}</a></p>
             </div>
           ) : (
-            <p style={{ color: 'var(--muted)' }}>Ожидаем доступный endpoint...</p>
+            <p style={{ color: 'var(--muted)' }}>РћР¶РёРґР°РµРј РґРѕСЃС‚СѓРїРЅС‹Р№ endpoint...</p>
           )}
         </div>
 
@@ -67,26 +67,27 @@ export default function ConfigPage() {
           {data ? (
             <img alt="QR proxy" src={`data:image/png;base64,${data.qr_base64}`} />
           ) : (
-            <p style={{ color: 'var(--muted)' }}>QR появится после загрузки</p>
+            <p style={{ color: 'var(--muted)' }}>QR РїРѕСЏРІРёС‚СЃСЏ РїРѕСЃР»Рµ Р·Р°РіСЂСѓР·РєРё</p>
           )}
         </div>
       </div>
 
       <div className="card">
-        <h3>3 шага подключения</h3>
+        <h3>3 С€Р°РіР° РїРѕРґРєР»СЋС‡РµРЅРёСЏ</h3>
         <div className="steps">
-          <div className="step"><b>1</b><span>Нажмите на TG-ссылку или сканируйте QR-код в Telegram.</span></div>
-          <div className="step"><b>2</b><span>Подтвердите добавление прокси в клиенте.</span></div>
-          <div className="step"><b>3</b><span>Если не подключается, нажмите «Обновить» и попробуйте снова.</span></div>
+          <div className="step"><b>1</b><span>РќР°Р¶РјРёС‚Рµ РЅР° TG-СЃСЃС‹Р»РєСѓ РёР»Рё СЃРєР°РЅРёСЂСѓР№С‚Рµ QR-РєРѕРґ РІ Telegram.</span></div>
+          <div className="step"><b>2</b><span>РџРѕРґС‚РІРµСЂРґРёС‚Рµ РґРѕР±Р°РІР»РµРЅРёРµ РїСЂРѕРєСЃРё РІ РєР»РёРµРЅС‚Рµ.</span></div>
+          <div className="step"><b>3</b><span>Р•СЃР»Рё РЅРµ РїРѕРґРєР»СЋС‡Р°РµС‚СЃСЏ, РЅР°Р¶РјРёС‚Рµ В«РћР±РЅРѕРІРёС‚СЊВ» Рё РїРѕРїСЂРѕР±СѓР№С‚Рµ СЃРЅРѕРІР°.</span></div>
         </div>
       </div>
 
       <div className="card faq">
-        <h3>Мини-FAQ</h3>
-        <p><b>Это безопасно?</b> Ссылка содержит только параметры подключения прокси.</p>
-        <p><b>Почему иногда не работает?</b> Ноды ротируются и часть может временно быть недоступной.</p>
-        <p><b>Нужен VPN?</b> Нет, это fallback-канал для Telegram, когда обычный маршрут недоступен.</p>
+        <h3>РњРёРЅРё-FAQ</h3>
+        <p><b>Р­С‚Рѕ Р±РµР·РѕРїР°СЃРЅРѕ?</b> РЎСЃС‹Р»РєР° СЃРѕРґРµСЂР¶РёС‚ С‚РѕР»СЊРєРѕ РїР°СЂР°РјРµС‚СЂС‹ РїРѕРґРєР»СЋС‡РµРЅРёСЏ РїСЂРѕРєСЃРё.</p>
+        <p><b>РџРѕС‡РµРјСѓ РёРЅРѕРіРґР° РЅРµ СЂР°Р±РѕС‚Р°РµС‚?</b> РќРѕРґС‹ СЂРѕС‚РёСЂСѓСЋС‚СЃСЏ Рё С‡Р°СЃС‚СЊ РјРѕР¶РµС‚ РІСЂРµРјРµРЅРЅРѕ Р±С‹С‚СЊ РЅРµРґРѕСЃС‚СѓРїРЅРѕР№.</p>
+        <p><b>РќСѓР¶РµРЅ VPN?</b> РќРµС‚, СЌС‚Рѕ fallback-РєР°РЅР°Р» РґР»СЏ Telegram, РєРѕРіРґР° РѕР±С‹С‡РЅС‹Р№ РјР°СЂС€СЂСѓС‚ РЅРµРґРѕСЃС‚СѓРїРµРЅ.</p>
       </div>
     </>
   );
 }
+

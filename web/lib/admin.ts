@@ -1,4 +1,4 @@
-import { redirect } from 'next/navigation';
+﻿import { redirect } from 'next/navigation';
 
 import { apiGet } from './api';
 
@@ -12,3 +12,4 @@ export async function requireAdminJson(path: string) {
   }
   return res.json();
 }
+
