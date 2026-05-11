@@ -1,13 +1,23 @@
-﻿const API = process.env.MASTER_PUBLIC_API ?? 'http://localhost:8080/api/v1';
+﻿import { apiGet } from '../../lib/api';
 
 async function fetchAlerts() {
-  const res = await fetch(`${API}/alerts`, { cache: 'no-store' });
-  if (!res.ok) return [];
+  const res = await apiGet('/alerts');
+  if (!res.ok) return null;
   return res.json();
 }
 
 export default async function AlertsPage() {
   const alerts = await fetchAlerts();
+  if (!alerts) {
+    return (
+      <div className="card">
+        <h2>Alerts</h2>
+        <p>Authentication required.</p>
+        <a href="/login">Go to login</a>
+      </div>
+    );
+  }
+
   return (
     <div className="card">
       <h2>Alerts</h2>

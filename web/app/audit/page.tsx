@@ -1,13 +1,23 @@
-﻿const API = process.env.MASTER_PUBLIC_API ?? 'http://localhost:8080/api/v1';
+﻿import { apiGet } from '../../lib/api';
 
 async function fetchAudit() {
-  const res = await fetch(`${API}/audit`, { cache: 'no-store' });
-  if (!res.ok) return [];
+  const res = await apiGet('/audit');
+  if (!res.ok) return null;
   return res.json();
 }
 
 export default async function AuditPage() {
   const logs = await fetchAudit();
+  if (!logs) {
+    return (
+      <div className="card">
+        <h2>Access and Audit</h2>
+        <p>Admin authentication required.</p>
+        <a href="/login">Go to login</a>
+      </div>
+    );
+  }
+
   return (
     <div className="card">
       <h2>Access and Audit</h2>
