@@ -202,6 +202,35 @@ def proxy_random_qr(request: Request, db: Session = Depends(get_db)):
     return ProxyWithQrOut(**proxy, qr_base64=qr)
 
 
+@router.get("/proxy/public-status")
+def proxy_public_status(db: Session = Depends(get_db)):
+    total = db.scalar(select(func.count()).select_from(Node)) or 0
+    online = db.scalar(select(func.count()).select_from(Node).where(Node.is_online.is_(True), Node.is_enabled.is_(True))) or 0
+    avg_rtt = db.scalar(select(func.avg(Node.rtt_ms)).where(Node.is_online.is_(True), Node.is_enabled.is_(True)))
+    sample = db.scalars(
+        select(Node)
+        .where(Node.is_online.is_(True), Node.is_enabled.is_(True))
+        .order_by(Node.rtt_ms.asc())
+        .limit(1)
+    ).first()
+
+    availability = 0.0
+    if total > 0:
+        availability = round((online / total) * 100, 2)
+
+    return {
+        "availability_pct": availability,
+        "active_nodes": online,
+        "avg_latency_ms": round(float(avg_rtt), 1) if avg_rtt is not None else 0.0,
+        "region": sample.region if sample else "-",
+        "provider": sample.provider if sample else "-",
+        "protocol": "EE/FakeTLS",
+        "handshake": "ok" if online > 0 else "degraded",
+        "reachability": "healthy" if online > 0 else "degraded",
+        "rotation_seconds": 1800,
+    }
+
+
 @router.get("/nodes/{node_id}/stats", response_model=NodeStats)
 def node_stats(node_id: int, _: dict = Depends(require_roles(Role.VIEWER.value, Role.OPERATOR.value, Role.ADMIN.value)), db: Session = Depends(get_db)):
     node = db.get(Node, node_id)
