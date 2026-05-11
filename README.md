@@ -55,3 +55,10 @@ Default demo secret in `.env.example` is `JBSWY3DPEHPK3PXP`.
 
 Secret storage currently uses base64 obfuscation (temporary mode).
 Before production launch, replace with real encryption (Vault/KMS/libsodium).
+
+## Production Compose
+
+Use isolated project name and prod ports:
+```bash
+docker compose -p relay -f docker-compose.prod.yml up -d --build
+```
